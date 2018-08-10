@@ -17,7 +17,7 @@ var {
 var app = express();
 app.use(bodyParser.json());
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3110;
 
 app.post('/todos', (req, res) => {
 
@@ -48,24 +48,43 @@ app.get('/todos', (req, res) => {
 app.get('/todos/:id', (req, res) => {
 
     var id = req.params.id;
+    if (!ObjectId.isValid(id)) {
+        return res.status(404).send();
+    }
+    Todo.findById(id).then((todo) => {
+        if (!todo) {
+            return res.status(400).send();
+        }
+        res.status(200).send({
+            todo
+        });
+    }).catch((e) => {
+        res.status(404).send();
+    });
+});
+
+app.delete('/todos/:id', (req, res) => {
+
+    var id = req.params.id;
 
     if (!ObjectId.isValid(id)) {
         return res.status(404).send();
     }
 
-    Todo.findById(id).then((todo) => {
+    Todo.findByIdAndRemove(id).then((todo) => {
 
         if (!todo) {
-            return res.status(400).send();
+            return res.status(404).send();
         }
 
-        res.status(200).send({todo});
+        res.status(200).send({
+            todo
+        });
 
     }).catch((e) => {
-        res.status(404).send();
-    });
-
-});
+        res.status(400).send();
+    })
+})
 
 
 app.listen(port, () => {
